@@ -25,6 +25,9 @@ if not BOT_TOKEN:
 
 TELEGRAM_API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
+SUBSCRIBE_BUTTON = "Subscribe to database updates"
+UNSUBSCRIBE_BUTTON = "Unsubscribe"
+
 MENU_KEYBOARD = {
     "keyboard": [
         [{"text": "Project overview"}, {"text": "Dataset"}],
@@ -32,7 +35,7 @@ MENU_KEYBOARD = {
         [{"text": "Maps"}, {"text": "Hypothesis 1"}],
         [{"text": "Hypothesis 2"}, {"text": "API"}],
         [{"text": "Sample records"}, {"text": "Links"}],
-        [{"text": "Subscribe to updates"}, {"text": "Unsubscribe from updates"}],
+        [{"text": SUBSCRIBE_BUTTON}, {"text": UNSUBSCRIBE_BUTTON}],
         [{"text": "Help"}],
     ],
     "resize_keyboard": True,
@@ -105,7 +108,7 @@ def subscribe_to_updates(chat_id: int) -> str:
     save_subscribers(subscribers)
 
     return (
-        "You are subscribed to update notifications.\n\n"
+        "You are subscribed to database updates.\n\n"
         "When a new demo record is created through POST /records, "
         "this bot will send you the full record information."
     )
@@ -116,7 +119,7 @@ def unsubscribe_from_updates(chat_id: int) -> str:
     subscribers.discard(chat_id)
     save_subscribers(subscribers)
 
-    return "You are unsubscribed from update notifications."
+    return "You are unsubscribed from database updates."
 
 
 def get_records_from_api(limit: int = 3) -> Dict[str, Any]:
@@ -136,8 +139,9 @@ def page_start() -> str:
     return (
         "ANES 2024 Election Analysis Bot\n\n"
         "Use the menu buttons below to open different parts of the project.\n\n"
-        "You can also press Subscribe to updates to receive a notification "
-        "when a new demo record is created."
+        "You can also subscribe to database updates. "
+        "After that, when a new demo record is created through POST /records, "
+        "this bot will send you the full record information."
     )
 
 
@@ -327,51 +331,87 @@ def page_links() -> str:
 def page_help() -> str:
     return (
         "Help\n\n"
-        "Press one of the menu buttons:\n"
-        "- Project overview: general project description\n"
-        "- Dataset: dataset and variables\n"
-        "- Statistics: descriptive statistics section\n"
-        "- Visualizations: charts in the app\n"
-        "- Maps: state maps\n"
-        "- Hypothesis 1: turnout, age, and income\n"
-        "- Hypothesis 2: education, ideology, and vote choice\n"
-        "- API: FastAPI endpoints and documentation\n"
-        "- Sample records: live records from the API\n"
-        "- Links: Streamlit app, API docs, and GitHub link\n"
-        "- Subscribe to updates: receive new-record notifications\n"
-        "- Unsubscribe from updates: stop receiving new-record notifications"
+        "Available menu options:\n"
+        "- Project overview\n"
+        "- Dataset\n"
+        "- Statistics\n"
+        "- Visualizations\n"
+        "- Maps\n"
+        "- Hypothesis 1\n"
+        "- Hypothesis 2\n"
+        "- API\n"
+        "- Sample records\n"
+        "- Links\n"
+        "- Subscribe to database updates\n"
+        "- Unsubscribe"
+    )
+
+
+def page_unknown() -> str:
+    return (
+        "I did not recognize this message as a project menu option.\n\n"
+        "You can type one of the section names, for example:\n"
+        "Project overview, Dataset, Statistics, Visualizations, Maps, API, Sample records, Links.\n\n"
+        "Or press Help to see all available options."
     )
 
 
 def handle_text(chat_id: int, text: str) -> None:
     normalized = text.strip().lower()
 
-    if normalized == "subscribe to updates":
+    subscribe_aliases = {
+        "subscribe to database updates",
+        "subscribe to updates",
+        "/subscribe",
+        "subscribe",
+    }
+    unsubscribe_aliases = {
+        "unsubscribe",
+        "unsubscribe from updates",
+        "unsubscribe from database updates",
+        "/unsubscribe",
+    }
+
+    if normalized in subscribe_aliases:
         send_message(chat_id, subscribe_to_updates(chat_id))
         return
 
-    if normalized == "unsubscribe from updates":
+    if normalized in unsubscribe_aliases:
         send_message(chat_id, unsubscribe_from_updates(chat_id))
         return
 
     pages = {
         "/start": page_start,
         "start": page_start,
-        "project overview": page_overview,
-        "dataset": page_dataset,
-        "statistics": page_statistics,
-        "visualizations": page_visualizations,
-        "maps": page_maps,
-        "hypothesis 1": page_hypothesis_1,
-        "hypothesis 2": page_hypothesis_2,
-        "api": page_api,
-        "sample records": page_sample_records,
-        "links": page_links,
+        "/help": page_help,
         "help": page_help,
+        "project overview": page_overview,
+        "overview": page_overview,
+        "dataset": page_dataset,
+        "data": page_dataset,
+        "statistics": page_statistics,
+        "stats": page_statistics,
+        "visualizations": page_visualizations,
+        "visualization": page_visualizations,
+        "charts": page_visualizations,
+        "maps": page_maps,
+        "map": page_maps,
+        "hypothesis 1": page_hypothesis_1,
+        "hypothesis one": page_hypothesis_1,
+        "hypothesis 2": page_hypothesis_2,
+        "hypothesis two": page_hypothesis_2,
+        "api": page_api,
+        "fastapi": page_api,
+        "sample records": page_sample_records,
+        "records": page_sample_records,
+        "links": page_links,
     }
 
-    page_function = pages.get(normalized, page_help)
-    send_message(chat_id, page_function())
+    page_function = pages.get(normalized)
+    if page_function is None:
+        send_message(chat_id, page_unknown())
+    else:
+        send_message(chat_id, page_function())
 
 
 def main() -> None:
