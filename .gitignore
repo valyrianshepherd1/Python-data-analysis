@@ -1,0 +1,8 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+__MACOSX/
+data/processed/user_added_records.csv
+data/processed/telegram_subscribers.txt
