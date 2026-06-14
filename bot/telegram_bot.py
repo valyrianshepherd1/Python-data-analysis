@@ -138,10 +138,17 @@ def get_records_from_api(limit: int = 3) -> Dict[str, Any]:
 def page_start() -> str:
     return (
         "ANES 2024 Election Analysis Bot\n\n"
-        "Use the menu buttons below to open different parts of the project.\n\n"
-        "You can also subscribe to database updates. "
-        "After that, when a new demo record is created through POST /records, "
-        "this bot will send you the full record information."
+        "Choose any project section from the menu below:\n"
+        "- Project overview\n"
+        "- Dataset\n"
+        "- Statistics\n"
+        "- Visualizations\n"
+        "- Maps\n"
+        "- Hypotheses\n"
+        "- API\n"
+        "- Sample records\n"
+        "- Links\n\n"
+        "The menu also contains optional update subscription buttons."
     )
 
 
@@ -350,7 +357,7 @@ def page_help() -> str:
 def page_unknown() -> str:
     return (
         "I did not recognize this message as a project menu option.\n\n"
-        "You can use the keyboard buttons below, or type Help to see all available options."
+        "Use the menu below or type Help."
     )
 
 
@@ -393,7 +400,6 @@ def handle_text(chat_id: int, text: str) -> None:
     }
 
     page_function = pages.get(normalized)
-
     if page_function is None:
         send_message(chat_id, page_unknown())
     else:
