@@ -331,54 +331,31 @@ def page_links() -> str:
 def page_help() -> str:
     return (
         "Help\n\n"
-        "Available menu options:\n"
-        "- Project overview\n"
-        "- Dataset\n"
-        "- Statistics\n"
-        "- Visualizations\n"
-        "- Maps\n"
-        "- Hypothesis 1\n"
-        "- Hypothesis 2\n"
-        "- API\n"
-        "- Sample records\n"
-        "- Links\n"
-        "- Subscribe to database updates\n"
-        "- Unsubscribe"
+        "Press one of the menu buttons:\n"
+        "- Project overview: general project description\n"
+        "- Dataset: dataset and variables\n"
+        "- Statistics: descriptive statistics section\n"
+        "- Visualizations: charts in the app\n"
+        "- Maps: state maps\n"
+        "- Hypothesis 1: turnout, age, and income\n"
+        "- Hypothesis 2: education, ideology, and vote choice\n"
+        "- API: FastAPI endpoints and documentation\n"
+        "- Sample records: live records from the API\n"
+        "- Links: Streamlit app, API docs, and GitHub link\n"
+        "- Subscribe to database updates: receive new-record notifications\n"
+        "- Unsubscribe: stop receiving new-record notifications"
     )
 
 
 def page_unknown() -> str:
     return (
         "I did not recognize this message as a project menu option.\n\n"
-        "You can type one of the section names, for example:\n"
-        "Project overview, Dataset, Statistics, Visualizations, Maps, API, Sample records, Links.\n\n"
-        "Or press Help to see all available options."
+        "You can use the keyboard buttons below, or type Help to see all available options."
     )
 
 
 def handle_text(chat_id: int, text: str) -> None:
     normalized = text.strip().lower()
-
-    subscribe_aliases = {
-        "subscribe to database updates",
-        "subscribe to updates",
-        "/subscribe",
-        "subscribe",
-    }
-    unsubscribe_aliases = {
-        "unsubscribe",
-        "unsubscribe from updates",
-        "unsubscribe from database updates",
-        "/unsubscribe",
-    }
-
-    if normalized in subscribe_aliases:
-        send_message(chat_id, subscribe_to_updates(chat_id))
-        return
-
-    if normalized in unsubscribe_aliases:
-        send_message(chat_id, unsubscribe_from_updates(chat_id))
-        return
 
     pages = {
         "/start": page_start,
@@ -405,9 +382,18 @@ def handle_text(chat_id: int, text: str) -> None:
         "sample records": page_sample_records,
         "records": page_sample_records,
         "links": page_links,
+        "subscribe to database updates": lambda: subscribe_to_updates(chat_id),
+        "subscribe to updates": lambda: subscribe_to_updates(chat_id),
+        "/subscribe": lambda: subscribe_to_updates(chat_id),
+        "subscribe": lambda: subscribe_to_updates(chat_id),
+        "unsubscribe": lambda: unsubscribe_from_updates(chat_id),
+        "unsubscribe from updates": lambda: unsubscribe_from_updates(chat_id),
+        "unsubscribe from database updates": lambda: unsubscribe_from_updates(chat_id),
+        "/unsubscribe": lambda: unsubscribe_from_updates(chat_id),
     }
 
     page_function = pages.get(normalized)
+
     if page_function is None:
         send_message(chat_id, page_unknown())
     else:
